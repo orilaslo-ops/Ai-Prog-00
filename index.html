@@ -41,7 +41,7 @@ function burst(x, y, count, speed) {
       vy: Math.sin(a) * s,
       life: 1,
       decay: 0.015 + Math.random() * 0.02,
-      size: 1 + Math.random() * 1.5,
+      size: 1.5 + Math.random() * 2,
       hue: hue + Math.random() * 40 - 20,
     });
   }
@@ -70,7 +70,9 @@ function frame() {
     p.vy *= 0.98;
     p.life -= p.decay;
     if (p.life <= 0) { particles.splice(i, 1); continue; }
-    ctx.fillStyle = `hsla(${p.hue}, 100%, 60%, ${p.life})`;
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = `hsl(${p.hue}, 100%, 65%)`;
+    ctx.fillStyle = `hsla(${p.hue}, 100%, 75%, ${p.life})`;
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
     ctx.fill();
