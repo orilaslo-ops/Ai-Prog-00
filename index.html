@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Fireworks</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0a0a14; }
+  canvas { display: block; }
+  h1 {
+    position: fixed; inset: 0; margin: 0;
+    display: flex; align-items: center; justify-content: center;
+    font: 300 1.2rem/1 system-ui, sans-serif; letter-spacing: .3em;
+    color: rgba(255,255,255,.35); pointer-events: none; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<h1>Move the mouse · Click to burst</h1>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+addEventListener('resize', resize);
+resize();
+
+const particles = [];
+let hue = 0;
+let last = { x: null, y: null };
+
+function burst(x, y, count, speed) {
+  hue = (hue + 25) % 360;
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const s = Math.random() * speed;
+    particles.push({
+      x, y,
+      vx: Math.cos(a) * s,
+      vy: Math.sin(a) * s,
+      life: 1,
+      decay: 0.015 + Math.random() * 0.02,
+      size: 1 + Math.random() * 1.5,
+      hue: hue + Math.random() * 40 - 20,
+    });
+  }
+}
+
+addEventListener('mousemove', e => {
+  if (last.x !== null && Math.hypot(e.clientX - last.x, e.clientY - last.y) < 18) return;
+  last = { x: e.clientX, y: e.clientY };
+  burst(e.clientX, e.clientY, 8, 2.5);
+});
+addEventListener('mousedown', e => burst(e.clientX, e.clientY, 80, 6));
+
+function frame() {
+  // translucent fill leaves fading trails
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'rgba(10,10,20,0.2)';
+  ctx.fillRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'lighter';
+
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.05;      // gravity
+    p.vx *= 0.98;      // drag
+    p.vy *= 0.98;
+    p.life -= p.decay;
+    if (p.life <= 0) { particles.splice(i, 1); continue; }
+    ctx.fillStyle = `hsla(${p.hue}, 100%, 60%, ${p.life})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>
